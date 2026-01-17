@@ -1,0 +1,13 @@
+{
+    "products": [
+        {
+            "id": "sample-1",
+            "name": "Sample product",
+            "price": 10,
+            "stock": 100,
+            "description": "This is a sample product.",
+            "image": ""
+        }
+    ],
+    "sales": []
+}

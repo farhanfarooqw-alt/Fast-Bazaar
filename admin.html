@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - FAST BAZAAR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./index.css">
+    <link rel="icon" type="image/png" href="logo.png" />
+</head>
+
+<body>
+
+    <header>
+        <div class="logo-wrapper">
+            <img src="logo.png" alt="Fast Bazaar Logo" class="logo" />
+            <span class="tagline">Deal Bana</span>
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="sell.html">Sell Item</a>
+            <a href="about.html">About</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+    </header>
+
+    <!-- LOGIN SECTION -->
+    <section id="loginSection" style="max-width:400px;margin:30px auto;">
+        <div
+            style="background-color:#fff3cd;border:2px solid #ffc107;padding:15px;margin-bottom:20px;border-radius:5px;text-align:center;">
+            <p style="margin:0;font-size:16px;font-weight:bold;color:#856404;">⚠️ This Admin Panel is For Team Members
+                Only</p>
+            <p style="margin:5px 0 0 0;font-size:13px;color:#856404;">Unauthorized access is strictly prohibited</p>
+        </div>
+        <h3>Admin Login</h3>
+        <input type="password" id="adminPassword" placeholder="Enter Admin Password" style="width:100%;padding:10px;">
+        <button type="button" onclick="login()" style="margin-top:10px;width:100%">Login</button>
+        <p id="loginError" style="color:red;"></p>
+    </section>
+
+    <!-- ADMIN PANEL -->
+    <section id="adminPanel" style="display:none;max-width:600px;margin:30px auto;">
+        <h3>Add Product (Team Only)</h3>
+
+        <input type="text" id="productName" placeholder="Product Name" required>
+        <input type="number" id="productPrice" placeholder="Price (Rs)" required>
+        <label for="productImages" style="display:block;margin-top:8px;font-weight:bold;color:#333;">Product Images
+            (Select Multiple)</label>
+        <input type="file" id="productImages" accept="image/*" multiple required style="padding:8px;">
+        <p id="fileCount" style="font-size:12px;color:#666;margin-top:5px;"></p>
+
+        <textarea id="productDescription" placeholder="Product Description (e.g. condition, features, etc.)" required
+            style="width:100%;padding:10px;margin-top:10px;border:1px solid #ccc;border-radius:4px;font-family:Arial,sans-serif;resize:vertical;min-height:80px;"></textarea>
+
+        <input type="text" id="sellerName" placeholder="Seller Name (e.g. Ali BSCS-4A)" required>
+        <input type="text" id="sellerPhone" placeholder="Seller WhatsApp (923XXXXXXXXX)" required>
+
+        <button onclick="addProduct()" style="margin-top:10px;">Add Product</button>
+
+        <hr>
+
+        <h3>Existing Products</h3>
+        <div id="adminProductList"></div>
+
+        <button onclick="logout()" style="margin-top:20px;">Logout</button>
+    </section>
+
+    <script>
+        /* ===== LOGIN ===== */
+        function login() {
+            document.getElementById("loginError").innerText = "";
+            var inputPass = document.getElementById("adminPassword").value;
+            fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: inputPass })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("loginSection").style.display = "none";
+                    document.getElementById("adminPanel").style.display = "block";
+                    loadAdminProducts();
+                } else {
+                    document.getElementById("loginError").innerText = data.error || "Wrong password!";
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                document.getElementById("loginError").innerText = "Login failed.";
+            });
+        }
+
+        function logout() {
+            document.getElementById("adminPanel").style.display = "none";
+            document.getElementById("loginSection").style.display = "block";
+        }
+
+        // allow Enter key to submit password
+        (function () {
+            var pwd = document.getElementById('adminPassword');
+            if (pwd) {
+                pwd.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') login();
+                });
+            }
+        })();
+
+        // Show file count when images are selected
+        (function () {
+            var fileInput = document.getElementById('productImages');
+            if (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    var count = this.files.length;
+                    var countEl = document.getElementById('fileCount');
+                    if (countEl) {
+                        countEl.innerText = count + ' image(s) selected';
+                    }
+                });
+            }
+        })();
+
+        /* ===== ADD PRODUCT ===== */
+        function addProduct() {
+            var name = document.getElementById("productName").value;
+            var price = document.getElementById("productPrice").value;
+            var description = document.getElementById("productDescription").value;
+            var imageFiles = document.getElementById("productImages").files;
+            var sellerName = document.getElementById("sellerName").value;
+            var sellerPhone = document.getElementById("sellerPhone").value;
+
+            if (!name || !price || !description || !imageFiles || imageFiles.length === 0 || !sellerName || !sellerPhone) {
+                alert("Please fill all fields including description");
+                return;
+            }
+            // Read multiple files as Data URLs
+            function readFileAsDataURL(file) {
+                return new Promise(function (resolve, reject) {
+                    var r = new FileReader();
+                    r.onload = function (ev) { resolve(ev.target.result); };
+                    r.onerror = reject;
+                    r.readAsDataURL(file);
+                });
+            }
+
+            var fileArray = Array.prototype.slice.call(imageFiles);
+            Promise.all(fileArray.map(readFileAsDataURL)).then(function (imagesData) {
+                var newProduct = {
+                    name: name,
+                    price: parseFloat(price),
+                    description: description,
+                    images: imagesData,
+                    sellerName: sellerName,
+                    sellerPhone: sellerPhone
+                };
+
+                // Save via API
+                fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newProduct)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error adding product: " + data.error);
+                    } else {
+                        alert("Product added successfully!");
+
+                        // Properly reset all form inputs
+                        document.getElementById("productName").value = "";
+                        document.getElementById("productPrice").value = "";
+                        document.getElementById("productDescription").value = "";
+                        document.getElementById("productImages").value = "";
+                        document.getElementById("sellerName").value = "";
+                        document.getElementById("sellerPhone").value = "";
+                        loadAdminProducts();
+                    }
+                })
+                .catch(error => {
+                    console.error('Add product error:', error);
+                    alert('Failed to add product');
+                });
+            }).catch(function (err) {
+                console.error(err);
+                alert('Failed to read images');
+            });
+        }
+
+        /* ===== LOAD & DELETE PRODUCTS ===== */
+        function loadAdminProducts() {
+            var list = document.getElementById("adminProductList");
+
+            // Load from API
+            fetch('/api/products')
+                .then(response => response.json())
+                .then(products => {
+                    if (products.length === 0) {
+                        list.innerHTML = "<p>No products yet.</p>";
+                        return;
+                    }
+
+                    var html = "";
+                    products.forEach(function (p) {
+                        html += `
+      <div style="border:1px solid #ccc;padding:10px;margin-bottom:10px;">
+        <strong>${p.name}</strong> - Rs ${p.price}<br>
+        Seller: ${p.sellerName} (${p.sellerPhone})<br>
+        <button onclick="deleteProduct('${p.id}')">Delete</button>
+      </div>
+    `;
+                    });
+
+                    list.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Load products error:', error);
+                    list.innerHTML = "<p>Error loading products.</p>";
+                });
+        }
+
+        function deleteProduct(id) {
+            if (!confirm("Delete this product?")) return;
+
+            // Delete via API
+            fetch(`/api/products/${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error deleting: " + data.error);
+                    } else {
+                        loadAdminProducts();
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete error:', error);
+                    alert('Failed to delete product');
+                });
+        }
+    </script>
+
+</body>
+
+</html>

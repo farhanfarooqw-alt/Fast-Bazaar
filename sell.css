@@ -1,0 +1,232 @@
+/* ================================
+   SELL PAGE STYLES - UPDATED
+================================ */
+
+/* RESET & BODY */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", Arial, sans-serif;
+}
+
+body.sell-page {
+    color: #3a1f57;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header and nav rules removed so global header/nav from index.css apply */
+
+/* ================================
+   MAIN CONTENT SECTION
+================================ */
+section {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    line-height: 1.6;
+    text-align: center;
+}
+
+section h1 {
+    font-size: 36px;
+    color: #5a189a;
+    margin-bottom: 20px;
+}
+
+section h3 {
+    color: #5a189a;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+section p {
+    font-size: 18px;
+    color: #3a1f57;
+    margin-bottom: 15px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+ul li::before {
+    content: "📌";
+    margin-right: 8px;
+}
+
+/* ================================
+   FORM STYLES
+================================ */
+.form-group {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #3a1f57;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus {
+    border-color: #5a189a;
+    outline: none;
+}
+
+.form-group input[type="file"] {
+    border: 2px dashed #ddd;
+    cursor: pointer;
+}
+
+.image-preview {
+    display: none;
+    max-width: 100%;
+    max-height: 200px;
+    margin-top: 10px;
+    border-radius: 6px;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+.add-product-btn,
+.submit-btn {
+    width: 100%;
+    background: #5a189a;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 20px;
+}
+
+.add-product-btn:hover,
+.submit-btn:hover {
+    background: #3a0f50;
+}
+
+/* ================================
+   PRODUCT CARDS
+================================ */
+.my-products {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.product-card {
+    position: relative;
+    width: 220px;
+    background: white;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.product-card img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.product-card h3 {
+    font-size: 18px;
+    color: #5a189a;
+    margin: 10px 0 5px;
+}
+
+.product-card p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #3a1f57;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.delete-btn:hover {
+    background: #cc0000;
+}
+
+.no-products {
+    color: #666;
+    font-size: 18px;
+    padding: 50px;
+    text-align: center;
+}
+
+/* ================================
+   FOOTER
+================================ */
+footer {
+    background-color: #5a189a;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: auto;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+    .my-products {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    header .logo-wrapper {
+        flex-direction: column;
+    }
+}

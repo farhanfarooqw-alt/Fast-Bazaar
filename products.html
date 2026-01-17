@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - FAST BAZAAR</title>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="icon" type="image/png" href="logo.png" />
+</head>
+
+<body>
+
+    <header>
+        <div class="logo-wrapper">
+            <img src="logo.png" alt="Fast Bazaar Logo" class="logo" />
+            <span class="tagline">Deal Bana</span>
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="sell.html">Sell Item</a>
+            <a href="about.html">About</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+
+    </header>
+
+    <section class="featured">
+        <h2>Available Products</h2>
+
+        <!-- NOTICE -->
+        <p class="note" style="text-align:center;">
+            Only FAST Faisalabad students. Contact seller directly or through team to buy.
+        </p>
+
+        <p style="text-align:center; font-size:13px; color:#666; margin-bottom:15px;">
+            </strong> Click on product image to see other photos of the product
+        </p>
+
+        <div class="product-container" id="productContainer">
+            <!-- Products loaded from localStorage -->
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 FAST BAZAAR. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadProducts();
+        });
+
+        function loadProducts() {
+            var container = document.getElementById('productContainer');
+
+            // Load from API
+            fetch('/api/products')
+              .then(response => response.json())
+              .then(products => {
+                if (products.length === 0) {
+                  container.innerHTML =
+                    '<p class="no-products">No products available right now. Contact team to list your item.</p>';
+                  return;
+                }
+
+                var html = '';
+
+                for (var i = 0; i < products.length; i++) {
+                  var product = products[i];
+
+                  var imagesArr = product.images || [];
+                  var thumb = imagesArr.length ? imagesArr[0] : '';
+                  var imagesData = encodeURIComponent(JSON.stringify(imagesArr));
+
+                  html += '<div class="product-card" data-images="' + imagesData + '">';
+                  html += '<img src="' + thumb + '" alt="' + product.name + '" onclick="openGalleryFromCard(this)" />';
+                  html += '<h3>' + product.name + '</h3>';
+                  html += '<p><strong>Price:</strong> Rs ' + product.price + '</p>';
+
+                  html += '<p><strong>Seller:</strong> ' + (product.sellerName || 'N/A') + '</p>';
+
+                  html += '<p><strong>Contact:</strong> ';
+                  if (product.sellerPhone) {
+                    html += '<a href="https://wa.me/' + product.sellerPhone + '" target="_blank">';
+                    html += product.sellerPhone + '</a>';
+                  } else {
+                    html += 'N/A';
+                  }
+                  html += '</p>';
+
+                  if (product.description) {
+                    html += '<p><strong>Description:</strong> ' + product.description + '</p>';
+                  }
+
+                  // If multiple images, show small thumbnails
+                  if (imagesArr.length > 1) {
+                    html += '<div class="thumb-row">';
+                    for (var t = 0; t < Math.min(imagesArr.length, 3); t++) {
+                      html += '<img class="thumb" src="' + imagesArr[t] + '" data-index="' + t + '" onclick="openGalleryFromCard(this)" alt="thumb">';
+                    }
+                    html += '</div>';
+                  }
+
+                  html += '<p class="warning">Verify item before buying.</p>';
+
+                  html += '</div>';
+                }
+
+                container.innerHTML = html;
+              })
+              .catch(error => {
+                console.error('Error loading products:', error);
+                container.innerHTML = '<p class="no-products">Error loading products.</p>';
+              });
+        }
+
+        // ----- Gallery logic -----
+        var galleryState = { images: [], index: 0 };
+
+        function openGalleryFromCard(el) {
+            var card = el.closest('.product-card');
+            if (!card) return;
+            var images = [];
+            try {
+                images = JSON.parse(decodeURIComponent(card.dataset.images || '[]'));
+            } catch (e) { images = []; }
+
+            var startIndex = 0;
+            if (el.dataset && el.dataset.index) startIndex = parseInt(el.dataset.index);
+            else {
+                var src = el.src || el.getAttribute('src') || '';
+                startIndex = images.indexOf(src);
+                if (startIndex === -1) startIndex = 0;
+            }
+
+            showGallery(images, startIndex);
+        }
+
+        function showGallery(images, index) {
+            galleryState.images = images || [];
+            galleryState.index = index || 0;
+            var modal = document.getElementById('galleryModal');
+            var img = document.getElementById('galleryImage');
+            if (!modal || !img) return;
+            img.src = galleryState.images[galleryState.index] || '';
+            modal.classList.remove('hidden');
+        }
+
+        function closeGallery() { var modal = document.getElementById('galleryModal'); if (modal) modal.classList.add('hidden'); }
+        function prevImage() { if (!galleryState.images.length) return; galleryState.index = (galleryState.index - 1 + galleryState.images.length) % galleryState.images.length; document.getElementById('galleryImage').src = galleryState.images[galleryState.index]; }
+        function nextImage() { if (!galleryState.images.length) return; galleryState.index = (galleryState.index + 1) % galleryState.images.length; document.getElementById('galleryImage').src = galleryState.images[galleryState.index]; }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function (e) {
+            var modal = document.getElementById('galleryModal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'Escape') closeGallery();
+        });
+
+        // Touch swipe support
+        (function () {
+            var startX = 0;
+            var modal = document.getElementById('galleryModal');
+            document.addEventListener('touchstart', function (e) {
+                if (!modal || modal.classList.contains('hidden')) return;
+                startX = e.touches[0].clientX;
+            });
+            document.addEventListener('touchend', function (e) {
+                if (!modal || modal.classList.contains('hidden')) return;
+                var endX = e.changedTouches[0].clientX;
+                var diff = endX - startX;
+                if (Math.abs(diff) > 40) { if (diff > 0) prevImage(); else nextImage(); }
+            });
+        })();
+    </script>
+
+    <!-- Gallery modal -->
+    <div id="galleryModal" class="gallery-modal hidden">
+        <button class="close-btn" onclick="closeGallery()">×</button>
+        <img id="galleryImage" class="gallery-img" src="" alt="gallery image" />
+        <div class="gallery-controls">
+            <button onclick="prevImage()">‹</button>
+            <button onclick="nextImage()">›</button>
+        </div>
+    </div>
+
+</body>
+
+</html>

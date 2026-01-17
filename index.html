@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - FAST BAZAAR</title>
+  <link rel="stylesheet" href="./index.css">
+  <link rel="icon" type="image/png" href="logo.png" />
+
+</head>
+
+<body>
+
+  
+  <!-- Navigation / Header -->
+  <header>
+    <div class="logo-wrapper">
+      <img src="logo.png" alt="Fast Bazaar Logo" class="logo" />
+      <span class="tagline">Deal Bana</span>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="products.html">Products</a>
+      <a href="sell.html">Sell Item</a>
+      <a href="about.html">About</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-content">
+      <h2>Welcome to FAST BAZAAR</h2>
+      <p>Your Campus Marketplace for Amazing Deals</p>
+
+      <!-- IMPORTANT PURPOSE LINE -->
+      <p class="note">
+        Only for FAST Faisalabad students — Buy & sell used items through direct contact.
+      </p>
+
+      <!-- Buttons -->
+      <a href="products.html" class="hero-btn">Browse Products</a>
+      <a href="sell.html" class="hero-btn secondary-btn" id="sellBtn">Sell Your Item</a>
+    </div>
+  </div>
+
+  <!-- Featured Products -->
+  <div class="featured">
+    <h2>Featured Products</h2>
+
+    <div class="product-container" id="featuredProducts">
+      <!-- Products loaded from localStorage -->
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>About FAST BAZAAR</h4>
+        <p>FAST BAZAAR is a dedicated platform built to empower campus students by providing an affordable marketplace
+          for buying and selling items. Our mission is to facilitate direct deals between students, eliminating
+          unnecessary costs and bringing quality products within reach.</p>
+        <p><strong>What We Offer:</strong> Clothes, Accessories, Laptops, Mobiles, and much more from verified student
+          sellers on campus. Buy directly, make better deals, and support your fellow students.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 FAST BAZAAR. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      loadFeaturedProducts();
+
+      // Hero button: same tab redirect
+      var sellBtn = document.getElementById('sellBtn');
+      sellBtn.addEventListener('click', function (e) {
+        window.location.href = 'sell.html';
+      });
+    });
+
+    function loadFeaturedProducts() {
+      var container = document.getElementById('featuredProducts');
+
+      // Load from API
+      fetch('/api/products')
+        .then(response => response.json())
+        .then(products => {
+          if (products.length === 0) {
+            container.innerHTML =
+              '<p class="no-products">No products available. Contact team to list your item.</p>';
+            return;
+          }
+
+          var featuredCount = Math.min(products.length, 6);
+          var html = '';
+
+          for (var i = 0; i < featuredCount; i++) {
+            var product = products[i];
+            var imagesArr = product.images || [];
+            var thumb = imagesArr.length ? imagesArr[0] : '';
+            var imagesData = encodeURIComponent(JSON.stringify(imagesArr));
+            html += '<div class="product-card" data-images="' + imagesData + '">';
+            html += '<img src="' + thumb + '" alt="' + product.name + '" onclick="openGalleryFromCard(this)" />';
+            html += '<h3>' + product.name + '</h3>';
+            html += '<p>Rs ' + product.price + '</p>';
+            html += '<a href="products.html" class="contact-btn">View Details</a>';
+            html += '</div>';
+          }
+
+          container.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Error loading products:', error);
+          container.innerHTML = '<p class="no-products">Error loading products.</p>';
+        });
+    }
+  </script>
+
+  <!-- Gallery modal for featured -->
+  <div id="galleryModal" class="gallery-modal hidden">
+    <button class="close-btn" onclick="closeGallery()">×</button>
+    <img id="galleryImage" class="gallery-img" src="" alt="gallery image" />
+    <div class="gallery-controls">
+      <button onclick="prevImage()">‹</button>
+      <button onclick="nextImage()">›</button>
+    </div>
+  </div>
+
+  <script>
+    // Reusable gallery logic for featured section
+    var galleryState = { images: [], index: 0 };
+    function openGalleryFromCard(el) {
+      var card = el.closest('.product-card');
+      if (!card) return;
+      var images = [];
+      try { images = JSON.parse(decodeURIComponent(card.dataset.images || '[]')); } catch (e) { images = []; }
+      var startIndex = 0;
+      var src = el.src || el.getAttribute('src') || '';
+      startIndex = images.indexOf(src);
+      if (startIndex === -1) startIndex = 0;
+      showGallery(images, startIndex);
+    }
+    function showGallery(images, index) {
+      galleryState.images = images || [];
+      galleryState.index = index || 0;
+      var modal = document.getElementById('galleryModal');
+      var img = document.getElementById('galleryImage');
+      if (!modal || !img) return;
+      img.src = galleryState.images[galleryState.index] || '';
+      modal.classList.remove('hidden');
+    }
+    function closeGallery() { var modal = document.getElementById('galleryModal'); if (modal) modal.classList.add('hidden'); }
+    function prevImage() { if (!galleryState.images.length) return; galleryState.index = (galleryState.index - 1 + galleryState.images.length) % galleryState.images.length; document.getElementById('galleryImage').src = galleryState.images[galleryState.index]; }
+    function nextImage() { if (!galleryState.images.length) return; galleryState.index = (galleryState.index + 1) % galleryState.images.length; document.getElementById('galleryImage').src = galleryState.images[galleryState.index]; }
+    document.addEventListener('keydown', function (e) { var modal = document.getElementById('galleryModal'); if (!modal || modal.classList.contains('hidden')) return; if (e.key === 'ArrowLeft') prevImage(); if (e.key === 'ArrowRight') nextImage(); if (e.key === 'Escape') closeGallery(); });
+    (function () { var startX = 0; var modal = document.getElementById('galleryModal'); document.addEventListener('touchstart', function (e) { if (!modal || modal.classList.contains('hidden')) return; startX = e.touches[0].clientX; }); document.addEventListener('touchend', function (e) { if (!modal || modal.classList.contains('hidden')) return; var endX = e.changedTouches[0].clientX; var diff = endX - startX; if (Math.abs(diff) > 40) { if (diff > 0) prevImage(); else nextImage(); } }); })();
+  </script>
+
+</body>
+
+</html>
