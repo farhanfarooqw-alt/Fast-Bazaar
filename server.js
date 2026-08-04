@@ -2,6 +2,8 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,10 +17,14 @@ const COMMISSION_RATE = process.env.COMMISSION_RATE ? parseFloat(process.env.COM
 
 app.use(cors());
 app.use(express.json());
-// Serves index.html/admin.html/etc. when running locally with "node server.js".
-// Vercel ignores this in production (static files there come from the public/ folder),
-// so keeping it here is harmless and makes local testing work.
-app.use(express.static(__dirname));
+// Prefer serving a `public/` folder if present (works well locally and on many hosts).
+// Fallback to project root for older setups.
+const publicDir = path.join(__dirname, 'public');
+if (fs.existsSync(publicDir) && fs.statSync(publicDir).isDirectory()) {
+    app.use(express.static(publicDir));
+} else {
+    app.use(express.static(__dirname));
+}
 
 // ---- Lightweight admin protection ----
 // Not full auth (that's a separate phase), but stops anyone from hitting
@@ -26,7 +32,9 @@ app.use(express.static(__dirname));
 function requireAdmin(req, res, next) {
     const key = req.headers['x-admin-key'];
     if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: 'Admin password not configured' });
-    if (key !== process.env.ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
+    const configured = process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.trim();
+    const provided = key && String(key).trim();
+    if (provided !== configured) return res.status(401).json({ error: 'Unauthorized' });
     next();
 }
 
@@ -129,7 +137,9 @@ app.put('/api/sales/:id', requireAdmin, async (req, res) => {
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: 'Admin password not configured' });
-    if (password === process.env.ADMIN_PASSWORD) return res.json({ success: true });
+    const configured = process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.trim();
+    const provided = password && String(password).trim();
+    if (provided === configured) return res.json({ success: true });
     res.status(401).json({ error: 'Invalid credentials' });
 });
 
