@@ -16,7 +16,7 @@ const supabase = createClient(supabaseurl, supabasekey);
 const COMMISSION_RATE = process.env.COMMISSION_RATE ? parseFloat(process.env.COMMISSION_RATE) : 0.08;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 // Prefer serving a `public/` folder if present (works well locally and on many hosts).
 // Fallback to project root for older setups.
 const publicDir = path.join(__dirname, 'public');
